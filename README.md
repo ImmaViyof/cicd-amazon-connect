@@ -1,1 +1,1 @@
-# cicd-amazon-connect
+# sky-amazon-connect
