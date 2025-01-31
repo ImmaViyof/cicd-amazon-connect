@@ -19,7 +19,7 @@ variable "inbound_calls_enabled" {
 variable "outbound_calls_enabled" {
   description = "Enable outbound calls."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "instance_alias" {

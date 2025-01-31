@@ -13,7 +13,7 @@ variable "inbound_calls_enabled" {
 variable "outbound_calls_enabled" {
   description = "Enable outbound calls for Amazon Connect."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "instance_alias" {
