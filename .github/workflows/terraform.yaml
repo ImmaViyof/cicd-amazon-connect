@@ -1,0 +1,76 @@
+name: Terraform Deployment
+
+on:
+  push:
+    branches:
+      - main  # Change this to the branch you want to trigger the action
+
+  workflow_dispatch:  # Allows manual triggering
+
+permissions:
+  id-token: write  # Required for OIDC authentication
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    env:
+      TF_VERSION: "1.6.0"  # Set the Terraform version
+      AWS_REGION: "us-east-1"  # Change to your AWS region
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::039765606255:role/github-action-cicd-role
+          role-session-name: GitHubTerraformSession
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Validate Terraform files
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply (on main branch)
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
+
+  terraform-destroy:
+    runs-on: ubuntu-latest
+    needs: terraform
+    if: github.event_name == 'workflow_dispatch'  # Allows manual trigger only
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::039765606255:role/github-action-cicd-role
+          role-session-name: GitHubTerraformSession
+          aws-region: "us-east-1"
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.0"
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
+
